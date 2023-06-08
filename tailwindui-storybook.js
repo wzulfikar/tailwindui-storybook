@@ -38,7 +38,7 @@ async function run() {
     const sectionDir = `${outputDir}/${sectionName}`;
     createDir(sectionDir);
 
-    const storyDir = `${sectionDir}/stories`;
+    const storyDir = `${sectionDir}`;
     createDir(storyDir);
 
     const importComponents = [];
@@ -51,15 +51,19 @@ async function run() {
       const importName = componentName.match(/^\d/) ? `Component_${componentName}` : componentName;
 
       importComponents.push(
-        `import ${importName} from "./${componentName}";`
+        `import ${importName} from "./${componentName}.vue";`
       );
-      componentStories.push(`
-<Story name="${componentName}">
-    <${importName} />
-</Story>`);
+
+      componentStories.push(`export const ${importName}_Story = {
+  name: "${componentName}",
+  render: () => ({
+    components: { ${importName} },
+    template: '<${importName} />',
+  }),
+};`);
 
       fs.writeFileSync(
-        `${storyDir}/${componentName}.tsx`,
+        `${storyDir}/${componentName}.vue`,
         component.codeblocks[componentType]
       );
     });
@@ -69,11 +73,15 @@ async function run() {
 
 ${importComponents.join("\n")}
 
-<Meta title="${storyFolder} / ${sectionName}" />
+export default {
+  title: '${storyFolder} / ${sectionName}',
+  tags: ['autodocs'],
+};
+
 ${componentStories.join("\n")}
 `;
 
-    fs.writeFileSync(`${storyDir}/index.stories.mdx`, storyIndex);
+    fs.writeFileSync(`${storyDir}/index.stories.js`, storyIndex);
   });
 }
 
